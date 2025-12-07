@@ -4,7 +4,7 @@ on:
   schedule:
     # Expression CRON mise à jour :
     # "*/15 * * * *" -> toutes les 15 minutes, de chaque heure, chaque jour.
-    - cron: "*/15 * * * *"
+    - cron: "*/5 * * * *"
 
   # Permet de le lancer manuellement depuis l'interface GitHub
   workflow_dispatch:
