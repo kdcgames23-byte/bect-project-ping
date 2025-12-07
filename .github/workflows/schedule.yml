@@ -1,0 +1,50 @@
+name: Tâche Planifiée (Maintenance/Ping)
+
+on:
+  schedule:
+    # Expression CRON mise à jour :
+    # "*/15 * * * *" -> toutes les 15 minutes, de chaque heure, chaque jour.
+    - cron: "*/15 * * * *"
+
+  # Permet de le lancer manuellement depuis l'interface GitHub
+  workflow_dispatch:
+
+jobs:
+  run_ping_task:
+    runs-on: ubuntu-latest # Environnement d'exécution
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 1. Configurer Python (nécessaire pour exécuter un script)
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      # 2. Installer la librairie de requête HTTP
+      - name: Install dependencies
+        run: pip install requests
+
+      # 3. Créer le script de Ping (Vérification de l'activité du site)
+      # L'URL 'https://votresite.com' est remplacée par 'https://bect-project.onrender.com/'
+      - name: Create Ping Script
+        run: |
+          echo "import requests" > ping_site.py
+          echo "import datetime" >> ping_site.py
+          echo "try:" >> ping_site.py
+          echo "    # Utilisation de l'URL spécifique pour la requête" >> ping_site.py
+          echo "    response = requests.get('https://bect-project.onrender.com/', timeout=10)" >> ping_site.py
+          echo "    if response.status_code == 200:" >> ping_site.py
+          echo "        print(f'[{datetime.datetime.now()}] Site OK (200)')" >> ping_site.py
+          echo "    else:" >> ping_site.py
+          echo "        # Affiche le statut en cas d'erreur HTTP" >> ping_site.py
+          echo "        print(f'[{datetime.datetime.now()}] Site ERREUR ({response.status_code})')" >> ping_site.py
+          echo "except requests.exceptions.RequestException as e:" >> ping_site.py
+          echo "    # Affiche l'erreur en cas de problème de connexion (timeout, DNS, etc.)" >> ping_site.py
+          echo "    print(f'[{datetime.datetime.now()}] ERREUR CONNEXION: {e}')" >> ping_site.py
+
+      # 4. Exécuter le script de Ping
+      - name: Execute Ping
+        run: python ping_site.py
