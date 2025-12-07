@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang=fr>
+<head>
+<meta charset=UTF-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>Publier un niveau - BECT</title>
+<link rel=stylesheet href=style.css>
+<script src=https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js></script>
+<style>body{font-family:Arial,sans-serif;padding:20px;background:#121212;color:#eee}h1{text-align:center;margin-bottom:20px}form{max-width:500px;margin:0 auto;display:flex;flex-direction:column;gap:12px;background:#1e1e1e;padding:20px;border-radius:10px}button,input,textarea{padding:10px;border-radius:6px;border:none;font-size:16px}input,textarea{background:#2c2c2c;color:#eee}button{background:#4caf50;color:#fff;cursor:pointer;transition:.3s}button:hover{background:#45a049}#msg{text-align:center;margin-top:10px;font-weight:700}.limit-warning{font-size:13px;color:#f44336}</style>
+</head>
+<body>
+<header>
+<button onclick='location.href="index.html"'>⬅ Accueil</button>
+<h1 style=margin-left:20px>Publier un niveau</h1>
+</header>
+<p id=username-display style=text-align:center;margin-bottom:15px></p>
+<form id=form-publish onsubmit=return!1>
+  <input id=title placeholder="Titre du niveau (max 10 caractères)" required>
+ <p id=title-warning class=limit-warning></p>
+  <textarea id=description placeholder="Description du niveau (max 100 caractères)" rows=4></textarea>
+ <p id=desc-warning class=limit-warning></p>
+  <label>Fichier JSON du niveau :</label>
+  <input type=file id=jsonFile accept=.json required>
+  <label>Image 1 (Miniature) :</label>
+  <input type=file id=image1 accept=image/*>
+  <label>Image 2 :</label>
+  <input type=file id=image2 accept=image/*>
+  <label>Image 3 :</label>
+  <input type=file id=image3 accept=image/*>
+  <button id=btn-publish-level type=button>Publier</button>
+ <p id=msg></p>
+</form>
+<script type=module>const API_URL="https://bect-project.onrender.com/api",MIN_SIZE_TO_COMPRESS_MB=1,TARGET_SIZE_MB=.7;let user=JSON.parse(localStorage.getItem("bect_user"));const usernameDisplay=document.getElementById("username-display");user?usernameDisplay.textContent=`Connecté en tant que : ${user.username}`:(alert("Vous devez être connecté pour publier !"),window.location.href="connexion.html");const btn=document.getElementById("btn-publish-level"),msg=document.getElementById("msg"),titleInput=document.getElementById("title"),descInput=document.getElementById("description"),titleWarn=document.getElementById("title-warning"),descWarn=document.getElementById("desc-warning");function checkForbiddenWords(e){const t=["pute","connard","sexe","viols","porn","nu","enculé","viol","bais","seins","couilles","cul","salope","sodomie","baiser","branler","pénis","vagin","nichon","clitoris","sperme","éjaculation","fellatio","cuni","masturber","coït","inceste","pédophilie","zoophilie","drogue","cocaïne","héroïne","crack","cannabis","meurtre","tuer","raciste","nègre","juif","arabe","gouine","pd","sale","merde","gros mot","niquer","chier","tabarnak","hostie","milf","nudes","fuck","dick","pussy","ass","tits","cunt","whore","slut","cock","vagina","penis","nsfw","sex","rape","anal","bdsm","faggot","gay","lesbian","weed","coke","heroin","shit","kill","murder","nigger","kike","pornography","blowjob","jizz","cumshot","gangbang","incest","child abuse","pedo","zoophile","groping","molest","bitch","douchebag","goddamn","asshole","puta","joder","coño","culo","pene","vagina","mierda","cabrón","chingar","teta","pollas","gilipollas","maricón","violar","follar","cazzo","figa","puttana","troia","merda","stronzo","frocio","scopare","vaffanculo","coglione","sesso","violenza","fotze","wichser","arschloch","schwanz","muschi","ficken","scheiße","vergewaltigung","hure","nutte","titten","schwul","puta","caralho","fodase","pica","cu","bosta","violar","foder","buceta","porra","chupar","vagabunda","nsfw","milf","bdsm","hentai","sexo","guro","snuff","gore","lolicon","shota","drugs","4chan","gore","loli"],n=e.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").split(/\s+/).filter((e=>e.length>2));for(const e of n)if(t.includes(e))return e;return null}async function compressImageIfNeeded(e){if(!e)return{file:null,compressed:!1};if(e.size>1048576){const t={maxSizeMB:.7,maxWidthOrHeight:1920,useWebWorker:!0};try{return{file:await imageCompression(e,t),compressed:!0,originalSize:e.size}}catch(t){return console.error("Erreur lors de la compression :",t),{file:e,compressed:!1,originalSize:e.size}}}return{file:e,compressed:!1,originalSize:e.size}}titleInput.addEventListener("input",(()=>{titleInput.value.length>10?(titleWarn.textContent="Le titre ne doit pas dépasser 10 caractères.",titleInput.value=titleInput.value.slice(0,10)):titleWarn.textContent=""})),descInput.addEventListener("input",(()=>{descInput.value.length>100?(descWarn.textContent="La description ne doit pas dépasser 100 caractères.",descInput.value=descInput.value.slice(0,100)):descWarn.textContent=""})),btn.addEventListener("click",(async()=>{let e=titleInput.value.trim(),t=descInput.value.trim();const n=document.getElementById("jsonFile").files[0],s=document.getElementById("image1").files[0],o=document.getElementById("image2").files[0],r=document.getElementById("image3").files[0];if(!e||!n)return msg.style.color="#f44336",void(msg.textContent="Veuillez fournir un titre et un fichier JSON.");if(!s&&!o&&!r)return msg.style.color="#f44336",void(msg.textContent="Vous devez ajouter au moins une image.");if(e.length>10||t.length>100)return msg.style.color="#f44336",void(msg.textContent="Erreur de taille (titre max 10, description max 100).");const i=checkForbiddenWords(e),a=checkForbiddenWords(t);if(i)return msg.style.color="#f44336",void(msg.textContent=`Titre refusé : Le mot "${i}" n'est pas autorisé.`);if(a)return msg.style.color="#f44336",void(msg.textContent=`Description refusée : Le mot "${a}" n'est pas autorisé.`);msg.style.color="#ffa500",msg.textContent="Analyse des images et compression (si > 1Mo) en cours...",btn.disabled=!0;let l=!1;const c=await compressImageIfNeeded(s),u=await compressImageIfNeeded(o),d=await compressImageIfNeeded(r);(c.compressed||u.compressed||d.compressed)&&(l=!0);const m=new FormData;m.append("title",e),m.append("description",t),m.append("jsonFile",n),c.file&&m.append("image1",c.file),u.file&&m.append("image2",u.file),d.file&&m.append("image3",d.file),l?(msg.textContent="✅ Images compressées à 0.7 Mo max. Envoi des données...",msg.style.color="#4caf50"):(msg.textContent="Envoi des données au serveur...",msg.style.color="#fff");try{const e=await fetch(`${API_URL}/publish`,{method:"POST",headers:{Authorization:`Bearer ${user.token}`},body:m}),t=await e.json();btn.disabled=!1,t.success?(msg.style.color="#4caf50",msg.textContent="Niveau publié avec succès !",document.getElementById("form-publish").reset(),titleWarn.textContent="",descWarn.textContent=""):(msg.style.color="#f44336",msg.textContent=t.message||"Erreur lors de la publication")}catch(e){console.error(e),msg.style.color="#f44336",msg.textContent="Erreur serveur",btn.disabled=!1}}))</script>
+</body>
+</html>
